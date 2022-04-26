@@ -1,7 +1,3 @@
-#//version
-#//metadata-group /label
-#//stack name
-#//paramater
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This is a CloudFormation Template for VPC creation.
 
