@@ -1,0 +1,137 @@
+
+Resources:
+  VPC:                   #creation of vpc
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: myvpc
+
+  InternetGateway:          #creation of IGW
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: IGW
+
+  InternetGatewayAttachment:   #attachment of IGW to VPC
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway 
+      VpcId: !Ref VPC
+
+  PublicSubnet1:              #public subnet for az ap-south-1a
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: "ap-south-1a"
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true  
+      Tags:
+        - Key: Name
+          Value: PublicSubnet1
+
+  PrivateSubnet1:               #private subnet for az ap-south-1a
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: "ap-south-1a"
+      CidrBlock: 10.0.10.0/24
+      Tags:
+        - Key: Name
+          Value: privatesubnet
+   
+  PublicSubnet2:              #public subnet for az ap-south-1b
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: "ap-south-1b"
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true  
+      Tags:
+        - Key: Name
+          Value: PublicSubnet2
+
+  PrivateSubnet2:               #private subnet for az ap-south-1a
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: "ap-south-1b"
+      CidrBlock: 10.0.11.0/24
+      Tags:
+        - Key: Name
+          Value: privatesubnet2
+
+  EIPforNAT:                     #Elastic ip for nat device gateway
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment   #If you define an Elastic IP address and associate it with a VPC that is defined in the same template, you must declare a dependency on the VPC-gateway attachment
+    Properties: 
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIPforNAT.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PublicRouteTable:     #public route table to be associated
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key : Name
+          Value: Public-route-table
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PrivateRouteTable:      #private route table to be associated
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: Private-Route-Table
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PublicSubnet1Association:  #public subnet 1  with public routetable
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2Association:   #public subnet 2 with public routetable
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateSubnet1Association:       #private subnet 1 with public routetable
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+   
+  PrivateSubnet2Association:     #private subnet 2 with public routetable
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+       
+   
+   
+   
+   
