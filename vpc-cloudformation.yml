@@ -1,3 +1,7 @@
+#//version
+#//metadata-group /label
+#//stack name
+#//paramater
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This is a CloudFormation Template for VPC creation.
 
@@ -161,7 +165,10 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet2
        
-   
+Outputs:
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC  
    
    
    
