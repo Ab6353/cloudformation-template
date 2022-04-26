@@ -1,21 +1,51 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CloudFormation Template for VPC creation.
+
+Parameters:
+
+  VpcCIDR:
+    Description: Please Enter the IP Range (CIDR value)
+    Type: String
+    Default: 10.0.0.0/16
+
+  PublicSubnet1CIDR:
+    Description: Please Enter IP Range for Public Subnet 1
+    Type: String
+    Default: 10.0.1.0/24
+   
+  PublicSubnet2CIDR:
+    Description: Please Enter IP Range for Public Subnet 1
+    Type: String
+    Default: 10.0.2.0/24
+
+  PrivateSubnet1CIDR:
+    Description: Please Enter IP Range for Public Subnet 1
+    Type: String
+    Default: 10.0.10.0/24
+
+  PrivateSubnet2CIDR:
+    Description: Please Enter IP Range for Public Subnet 1
+    Type: String
+    Default: 10.0.11.0/24
+
 
 Resources:
   VPC:                   #creation of vpc
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.0.0.0/16
+      CidrBlock:  !Ref VpcCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: myvpc
+          Value: !Sub ${AWS::StackName}-myvpc #* //with stack name
 
   InternetGateway:          #creation of IGW
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: IGW
+          Value: !Sub ${AWS::StackName}-IGW
 
   InternetGatewayAttachment:   #attachment of IGW to VPC
     Type: AWS::EC2::VPCGatewayAttachment
@@ -27,43 +57,43 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: "ap-south-1a"
-      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [ 0, !GetAZs '' ] # * auto fetch
+      CidrBlock: !Ref PublicSubnet1CIDR
       MapPublicIpOnLaunch: true  
       Tags:
         - Key: Name
-          Value: PublicSubnet1
+          Value: !Sub ${AWS::StackName}-PublicSubnet1
 
   PrivateSubnet1:               #private subnet for az ap-south-1a
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: "ap-south-1a"
-      CidrBlock: 10.0.10.0/24
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref  PrivateSubnet1CIDR
       Tags:
         - Key: Name
-          Value: privatesubnet
+          Value: !Sub ${AWS::StackName}-privateSubnet1
    
   PublicSubnet2:              #public subnet for az ap-south-1b
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: "ap-south-1b"
-      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnet2CIDR
       MapPublicIpOnLaunch: true  
       Tags:
         - Key: Name
-          Value: PublicSubnet2
+          Value: !Sub ${AWS::StackName}-PublicSubnet2
 
   PrivateSubnet2:               #private subnet for az ap-south-1a
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
-      AvailabilityZone: "ap-south-1b"
-      CidrBlock: 10.0.11.0/24
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnet2CIDR
       Tags:
         - Key: Name
-          Value: privatesubnet2
+          Value: !Sub ${AWS::StackName}-privatesubnet2
 
   EIPforNAT:                     #Elastic ip for nat device gateway
     Type: AWS::EC2::EIP
@@ -83,7 +113,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key : Name
-          Value: Public-route-table
+          Value: !Sub ${AWS::StackName}-Public-route-table
 
   DefaultPublicRoute:
     Type: AWS::EC2::Route
@@ -98,7 +128,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: Private-Route-Table
+          Value: !Sub ${AWS::StackName}-Private-Route-Table
 
   DefaultPrivateRoute1:
     Type: AWS::EC2::Route
