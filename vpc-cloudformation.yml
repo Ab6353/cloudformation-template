@@ -166,5 +166,17 @@ Outputs:
     Description: A reference to the created VPC
     Value: !Ref VPC  
    
+  privatesubnet1:
+    Description: A refernence to private subnet 1
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: PrivateSubnet-1
+
+  privatesubnet2:
+    Description: A refernence to private subnet 2
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: PrivateSubnet-2
+   
    
    
