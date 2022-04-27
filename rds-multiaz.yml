@@ -1,6 +1,30 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This is a CloudFormation Template for RDS mysql with multi az enabled
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "RDS SETUP CONFIGURATION"
+        Parameters:
+          - DBName
+          - DBInstanceClass
+          - InitialDBName
+          - DeleteProtection 
+      - Label:
+          default: "DATABASE CONFIGURATION"
+        Parameters:
+          - StorageCapacity
+          - EngineType
+          - EngineVersion
+          - MasterUsername
+          - MasterUserPassword
+          - MaxAllocatedStorage
+      - Label:
+          default: "BACKUP"
+        Parameters:
+          - BackupRetentionPeriod
+
 Parameters:
   DBName: 
     Description: Enter the Name of the Database
