@@ -1,0 +1,114 @@
+Parameters:
+  ELBName: 
+    Description: Name of the Load Balancer
+    Type: String
+
+  AutoScalingGroupName: 
+    Description: Name of the ASG
+    Type: String
+
+  MinSize: 
+    Description: Minimum Capacity Size
+    Type: String
+    
+  MaxSize:
+    Description: Maximum Capacity Size
+    Type: String
+
+  GracePeriod: 
+    Description: Grace Period for Scaling
+    Type: String
+  LaunchConfName: 
+    Description: Name of the Launch Configuration
+    Type: String
+
+  KeyName: 
+    Description: EC2 Key Pair Name
+    Type: String
+
+  AMI: 
+    Description: AMI ID to create lauch configuartion
+    Type: String
+
+  InstanceType: 
+    Description: Instance Type
+    Type: String
+  TGName: 
+    Description: Name of the Target Group
+    Type: String
+
+  HealthCheckPath: 
+    Description: Health Check Path in target group
+    Type: String
+  HealthCheckProtocol: 
+    Description: Health Check Protocol in target group
+    Type: String
+
+
+Resources:
+  ASG: 
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Join ['-', [!Ref "AWS::StackName", !Ref "AutoScalingGroupName" ]]
+      LaunchConfigurationName: !Ref "AppLaunchConfig"
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
+      Cooldown: !Ref CooldownPeriod
+      HealthCheckGracePeriod: !Ref GracePeriod
+      HealthCheckType: ELB
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      VPCZoneIdentifier:
+        - !ImportValue PrivateSubnet-1
+        - !ImportValue PrivateSubnet-2
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: true
+        Value: !Join ['-', [!Ref "AWS::StackName", !Ref "AutoScalingGroupName" ]]
+
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: ASG
+    Properties: 
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: !Ref HealthCheckPath
+      HealthCheckPort: 80
+      HealthCheckProtocol: !Ref HealthCheckProtocol
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      IpAddressType: ipv4
+      Port: 80
+      Protocol: HTTP
+      Tags:
+      - Key: Name
+        Value: !Join ['-', [!Ref "AWS::StackName", !Ref "TGName" ]]
+      TargetType: instance
+      UnhealthyThresholdCount: 5
+      VpcId: !ImportValue VPCID
+
+  AppLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      LaunchConfigurationName: !Join ['-', [!Ref "AWS::StackName", !Ref "LaunchConfName" ]]
+      KeyName: !Ref "KeyName"
+      ImageId: !Ref "AMI"
+      SecurityGroups: [!ImportValue "AppSG"]
+      InstanceType: !Ref "InstanceType"
+      UserData: 
+        Fn::Base64:
+         #for user data script
+         
+         
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: TargetGroup
+    Properties:
+      Name: !Join ['-', [!Ref "AWS::StackName", !Ref "ELBName" ]]
+      SecurityGroups: [!ImportValue "LBSG"]
+      Subnets: 
+        - !ImportValue PublicSubnet-1
+        - !ImportValue PublicSubnet-2
+      Type: application
+      Scheme: internet-facing
