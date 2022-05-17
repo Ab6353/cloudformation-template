@@ -1,6 +1,18 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This is a CloudFormation Template for VPC creation.
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "VPC CONFIGURATION"
+        Parameters:
+          - VpcCIDR
+          - PublicSubnet1CIDR
+          - PublicSubnet2CIDR
+          - PrivateSubnet1CIDR 
+          - PrivateSubnet2CIDR
+      
 Parameters:
 
   VpcCIDR:
